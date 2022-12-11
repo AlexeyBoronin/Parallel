@@ -230,7 +230,8 @@ Task task1 = new Task(() =>
 {
     for (int i = 1; i < 10; i++)
     {
-        if(token1.IsCancellationRequested) //проверяем наличие сигнала омены задачи
+        //проверяем наличие сигнала омены задачи
+        if (token1.IsCancellationRequested) // CancelloationTokeSource.Token==true
         {
             WriteLine("Операция прервана");
             return;     //выходим из метода и тем самым завершаем задачу
@@ -242,7 +243,7 @@ Task task1 = new Task(() =>
 task1.Start();
 Thread.Sleep(1000);
 //после задержки по времени отменяем выполнение задач
-cancelTokenSource1.Cancel();
+cancelTokenSource1.Cancel(); //==CancellationTokenSource.Token==true; 
 //Ожидаем завершения задачи
 Thread.Sleep(1000);
 //проверяем статус задачи
