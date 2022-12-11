@@ -223,3 +223,28 @@ task1.Wait();*/
 //    WriteLine($"Квадрат числа {t1} равен {t1 * t1}");
 //    Thread.Sleep(2000);
 //}*/
+//Отмена задач и параллельных  операций. Cancellation Token
+CancellationTokenSource cancelTokenSource1 = new CancellationTokenSource();
+CancellationToken token1 = cancelTokenSource1.Token;
+Task task1 = new Task(() =>
+{
+    for (int i = 1; i < 10; i++)
+    {
+        if(token1.IsCancellationRequested) //проверяем наличие сигнала омены задачи
+        {
+            WriteLine("Операция прервана");
+            return;     //выходим из метода и тем самым завершаем задачу
+        }
+        WriteLine($"Квадрат числа {i} равен {i * i}");
+        Thread.Sleep(200);
+    }
+},token1);
+task1.Start();
+Thread.Sleep(1000);
+//после задержки по времени отменяем выполнение задач
+cancelTokenSource1.Cancel();
+//Ожидаем завершения задачи
+Thread.Sleep(1000);
+//проверяем статус задачи
+WriteLine($"Task status: {task1.Status}");
+cancelTokenSource1.Dispose();
