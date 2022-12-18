@@ -226,26 +226,62 @@ task1.Wait();*/
 //Отмена задач и параллельных  операций. Cancellation Token
 CancellationTokenSource cancelTokenSource1 = new CancellationTokenSource();
 CancellationToken token1 = cancelTokenSource1.Token;
-Task task1 = new Task(() =>
+/*//Task task1 = new Task(() => //мягкий выход из задачи без исключения 
+//{
+//    for (int i = 1; i < 10; i++)
+//    {
+//        //проверяем наличие сигнала омены задачи
+//        if (token1.IsCancellationRequested) // CancelloationTokeSource.Token==true
+//        {
+//            WriteLine("Операция прервана");
+//            return;     //выходим из метода и тем самым завершаем задачу
+//        }
+//        WriteLine($"Квадрат числа {i} равен {i * i}");
+//        Thread.Sleep(200);
+//    }
+//},token1);
+//task1.Start();
+//Thread.Sleep(1050);
+////после задержки по времени отменяем выполнение задач
+//cancelTokenSource1.Cancel(); //==CancellationTokenSource.Token==true; 
+////Ожидаем завершения задачи
+//Thread.Sleep(1000);
+////проверяем статус задачи
+//WriteLine($"Task status: {task1.Status}");
+//cancelTokenSource1.Dispose();*/
+//Отмена задачи с помощью генерации исключения
+try
+{
+    Task task = new Task(() =>
 {
     for (int i = 1; i < 10; i++)
     {
-        //проверяем наличие сигнала омены задачи
-        if (token1.IsCancellationRequested) // CancelloationTokeSource.Token==true
-        {
-            WriteLine("Операция прервана");
-            return;     //выходим из метода и тем самым завершаем задачу
-        }
+        if (token1.IsCancellationRequested)
+            token1.ThrowIfCancellationRequested();//генерируем исключение
         WriteLine($"Квадрат числа {i} равен {i * i}");
         Thread.Sleep(200);
     }
-},token1);
-task1.Start();
-Thread.Sleep(1000);
-//после задержки по времени отменяем выполнение задач
-cancelTokenSource1.Cancel(); //==CancellationTokenSource.Token==true; 
-//Ожидаем завершения задачи
-Thread.Sleep(1000);
-//проверяем статус задачи
-WriteLine($"Task status: {task1.Status}");
-cancelTokenSource1.Dispose();
+}, token1);
+
+    task.Start();
+    Thread.Sleep(1000);
+    //после задержки по времени отменяем выполнение задачи
+    cancelTokenSource1.Cancel();
+
+    task.Wait(); //ожидаем завершения задачи
+}
+catch(AggregateException ae)
+{
+    foreach(Exception e in ae.InnerExceptions)
+    {
+        if (e is TaskCanceledException)
+            WriteLine("Операция прервана");
+        else
+            WriteLine(e.Message);
+    }
+}
+finally
+{
+    cancelTokenSource1.Dispose();
+}
+WriteLine($"Task Status: {task.Status}");
